@@ -16,14 +16,9 @@
  */
  define('APP_PATH', dirname(__FILE__));
  define('RULES', APP_PATH."/qmid-rules.conf");
- define('DATEFORMAT', "d/m/Y@H:i:s");
- define('LOGFILE', "/var/log/qmid.log");
- define('IMAP_HOST', "localhost");
- define('IMAP_PORT', "993");
- define('IMAP_USER', "jorge@jorgefuertes.com");
- define('IMAP_PASS', "que16bain");
- define('IMAP_INBOX', "INBOX");
- define('IMAP_CONN', "{".IMAP_HOST.":".IMAP_PORT."/imap/ssl/novalidate-cert}".IMAP_INBOX);
+ require(APP_PATH.DIRECTORY_SEPARATOR."qmid.conf");
+ define('IMAP_CONN',  "{".IMAP_HOST.":".IMAP_PORT.IMAP_OPTIONS."}".IMAP_INBOX);
+ error_reporting(ERRORLEVEL);
 
  /* Instantiate general output and error: */
  $output = new Output();
@@ -38,7 +33,7 @@
 
  /* Imap: */
  $imap = new imap();
- $output->decir("> ".$imap->count()." mensajes para procesar.");
+ $output->decir("> ".$imap->count()." messages to process.");
  $dispatcher->imap = $imap;
 
  /* Process the mail */
@@ -46,7 +41,7 @@
 
  /* END */
  unset($imap);
- $error->Salir();
+ $error->Finish();
 
  /*
   * All imap work.
@@ -62,18 +57,22 @@
          $this->output = new Output();
          $this->error  = new ErrorControl();
          # Opens imap conection:
-         $this->output->decir("> Servidor: ".IMAP_CONN.".");
-         $this->output->decir("> Conectando con servidor imap...", 0);
-         $this->conn = imap_open (IMAP_CONN, IMAP_USER, IMAP_PASS);
+         $this->output->decir("> Server: ".IMAP_CONN.".");
+         $this->output->decir("> Connecting to IMAP server...", 0);
+         $this->conn = imap_open(IMAP_CONN, IMAP_USER, IMAP_PASS);
          if(!$this->conn)
          {
-             $this->output->decir("FALLO");
-             $this->error->ErrorGrave("Error de conexión imap.");
+             $this->output->decir("FAIL");
+             $this->error->CriticalError("IMAP connection error.");
          }
          else
          {
              $this->output->decir("OK");
          }
+
+         ###DEBUG###
+         #$mailboxes = imap_list($this->conn, "{".IMAP_HOST."}", "*");
+         ###########
      }
 
      /*
@@ -123,10 +122,50 @@
          return imap_num_msg($this->conn);
      }
 
+     /*
+      * Execute a rule over an array of message uids
+      * @param array $rule     The rule.
+      * @param array $aResults The messages result set.
+      * @return boolean        True if everything it's ok.
+      */
+     function ExecuteAction($rule, $aResults)
+     {
+        $this->output->decir("    - Executing action: " . $rule['action'], 0);
+        if ($rule['destination'] !== false)
+        {
+            $this->output->decir("-->".$rule['destination'].":");
+        }
+        else
+        {
+            $this->output->decir(":");
+        }
+
+        foreach($aResults as $key => $uid)
+        {
+            $this->output->decir("      - Message id ".$uid."...", 0);
+            if($rule['action'] == "MOVE")
+            {
+                $sucess = imap_mail_move($this->conn, $uid, $rule['destination'], CP_UID);
+            }
+
+            if($sucess)
+            {
+                $this->output->decir("OK");
+            }
+            else
+            {
+                $this->output->decir("FAIL");
+            }
+        }
+     }
+
      function __destruct()
      {
+         $this->output->decir("> Cleaning mailboxes...", 0);
+         imap_expunge($this->conn);
+         $this->output->decir("OK");
          imap_close($this->conn);
-         $this->output->decir("> Conexión imap cerrada.");
+         $this->output->decir("> IMAP connection closed.");
      }
  }
 
@@ -155,15 +194,15 @@
      {
          if(empty($this->imap))
          {
-             $this->error->ErrorGrave("Missing IMAP connection.");
+             $this->error->CriticalError("Missing IMAP connection.");
          }
          else
          {
              $this->output->decir("> Executing rules.");
              foreach($this->aRules as $key => $rule)
              {
-                $this->output->decir("  - Executing rule ".$key."/".count($this->aRules).": ".$rule['name']."...", 0);
-                if($rule['type'] == "CAB")
+                $this->output->decir("  + Executing rule ".$key."/".count($this->aRules).": ".$rule['name']."...", 0);
+                if($rule['type'] == "HEAD")
                 {
                     $aResults = $this->imap->SearchByHeader($rule['header'], $rule['text']);
                 }
@@ -174,22 +213,27 @@
                 if($aResults !== false)
                 {
                     $this->output->decir(count($aResults)." matches:");
-                    foreach($aResults as $num => $uid)
+                    if(count($aResults) > 0)
                     {
-                        $this->output->decir("    - Message: ".$uid.":");
-                        $msg_overview = $this->imap->FetchOverview($uid);
-                        $this->output->decir("      - FROM....: ".$msg_overview->from);
-                        $this->output->decir("      - SUBJECT.: ".$msg_overview->subject);
+                        $this->output->decir("    - Matches: ", 0);
+                        foreach($aResults as $num => $uid)
+                        {
+                            $this->output->decir("[".$uid."] ", 0);
+                        }
+                        $this->output->decir("");
                     }
+
+                    # Executing the rule's action:
+                    $this->imap->ExecuteAction($rule, $aResults);
                 }
                 else
                 {
                     $this->output->decir("no matches.");
                 }
              }
-         }
+        }
      }
-     
+
      /*
       * Load, parse and returns the rules.
       */
@@ -205,31 +249,53 @@
                         $row = trim(fgets($fRules, 4096));
                         if(!preg_match("/^\#|^$/", $row))
                         {
-                            if(preg_match("/^.*\|.*\|.*\|.*\|.*$/", $row))
+                            if(preg_match("/^.*\|.*\|.*\|.*\$/", $row))
                             {
-                                list($name, $type, $header, $text, $destination) = explode("|", $row);
+                                list($name, $type, $text, $action) = explode("|", $row);
                                 $name        = trim($name);
                                 $type        = trim($type);
-                                $header      = trim($header);
                                 $text        = trim($text);
-                                $destination = trim($destination);
-                                if(!preg_match("/CAB|TXT/i", $type))
+                                $action      = trim($action);
+                                if(!preg_match("/^(HEAD\:.+|TEXT)$/i", $type)
+                                        or !preg_match("/^(MOVE\:.+|COPY\:.+|DELETE)$/i", $action))
                                 {
-                                    $this->errores->Warn("Unknown rule type: '".$row."'");
+                                    $this->error->Warn("Unknown rule type: '".$row."'");
                                 }
                                 else
                                 {
+                                    if(preg_match("/HEAD/i", $type))
+                                    {
+                                        # It's a header. Catch it.
+                                        list($type_only, $header) = explode(":", $type);
+                                    }
+                                    else
+                                    {
+                                        $type_only = $type;
+                                        $header = false;
+                                    }
+
+                                    if(!preg_match("/MOVE|COPY/i", $type))
+                                    {
+                                        list($action_only, $destination) = explode(":", $action);
+                                    }
+                                    else
+                                    {
+                                        $action_only = $action;
+                                        $destination = false;
+                                    }
+
                                     $aRules[] = array(
                                                 'name'        => $name,
-                                                'type'        => $type,
-                                                'header'      => $header,
+                                                'type'        => $type_only,
+                                                'header'      => strtolower($header),
                                                 'text'        => $text,
+                                                'action'      => strtoupper($action_only),
                                                 'destination' => $destination);
                                 }
                             }
                             else
                             {
-                                $this->errores->Warn("rule: '".$row.".");
+                                $this->error->Warn("rule: '".$row.".");
                             }
                         }
 	        }
@@ -239,7 +305,7 @@
 	 }
 	 else
 	 {
-                $this->errores->ErrorGrave("No existe el fichero de configuración.");
+                $this->error->CriticalError("No existe el fichero de configuración.");
 		return false;
 	 }
     }
@@ -293,7 +359,7 @@
     public function decir($txt, $nLF = 1, $error = false, $log = true)
     {
         # Carrige return's string:
-        $rnts = "";
+        $rtns = "";
         while($nLF > 0)
         {
             $rtns .= "\n";
@@ -314,7 +380,7 @@
  }
 
  /*
-  * Clase para gestión de errores.
+  * Error control class.
   */
  class ErrorControl
  {
@@ -332,23 +398,23 @@
         $this->output->decir("*** ERROR: ".$txt." ***", 2, true);
     }
 
-    public function ErrorGrave($txt)
+    public function CriticalError($txt)
     {
         $this->ErrorCount++;
         $this->output->decir("*** ERROR: ".$txt." ***", 2, true);
-        $this->Salir();
+        $this->Finish();
     }
 
-    public function Salir()
+    public function Finish()
     {
         if($this->ErrorCount == 0)
         {
-            $this->output->decir("> Finalizado sin errores.", 2);
+            $this->output->decir("> Ended without errors.", 2);
             $level = 0;
         }
         else
         {
-            $this->output->decir("> Finalizado con ".$this->ErrorCount." errores.", 2, true);
+            $this->output->decir("> Ended with ".$this->ErrorCount." errors.", 2, true);
             $level = 1;
         }
 

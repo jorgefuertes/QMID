@@ -2,7 +2,7 @@
 #
 # Mail dispatching rules.
 #
-# Name:|Type: |String: |Action:
+# Name: |Type: |String: |Action:
 #
 # - Name...: Free descriptive string.
 #
@@ -12,37 +12,37 @@
 # - String.: String to match at given search type.
 #
 # - Action.: What to do when match.
-#            MOVE:<mailbox> (Move message to given mailbox. Ex: MOVE:.Lists.php-devel).
+#            MOVE:<mailbox> (Move message to given mailbox. Ex: MOVE:Lists.php-devel).
 #            COPY:<mailbox> (Copy to given mailbox. Ex. COPY:.Important).
 #            DEL            (Delete message).
 #
 
 # ==========[Lists]===========================================================================
 
-Symfony-devs |HEAD:List-id  |symfony-devs.googlegroups.com  |MOVE:.Lists.Symfony
-Symfony-users|HEAD:List-id  |symfony-users.googlegroups.com |MOVE:.Lists.Symfony
-Symfony-es   |HEAD:List-id  |symfony-es                     |MOVE:.Lists.Symfony
+Symfony-devs |HEAD:List-id  |symfony-devs.googlegroups.com  |MOVE:Lists.Symfony
+Symfony-users|HEAD:List-id  |symfony-users.googlegroups.com |MOVE:Lists.Symfony
+Symfony-es   |HEAD:List-id  |symfony-es                     |MOVE:Lists.Symfony
 
 # ==========[News]============================================================================
-Google Alerts |HEAD:From   |googlealerts-noreply@google.com |MOVE:.News
-debian        |HEAD:List-id|debian-news                     |MOVE:.News
+Google Alerts |HEAD:From   |googlealerts-noreply@google.com |MOVE:News
+debian        |HEAD:List-id|debian-news                     |MOVE:News
 
 # ==========[People]==========================================================================
 # Work:
-All work |HEAD:From |@myenterprise.com |MOVE:.People.Work
+All work |HEAD:From |@myenterprise.com |MOVE:People.Work
 
 # ==========[Spam]============================================================================
-Spam BBVA2       |HEAD:From   |BBVA@bbva-secure.es     |MOVE:.Junk
-Spam promoway    |HEAD:From   |promoway                |MOVE:.Junk
-Spam bongostudio |HEAD:From   |info@bongostudio.es     |MOVE:.Junk
-Spam interservi  |HEAD:From   |info@interservi.info    |MOVE:.Junk
-SPAM             |HEAD:Subject|\*\*\*SPAM\*\*\*        |MOVE:.Junk
+Spam BBVA2       |HEAD:From   |BBVA@bbva-secure.es     |MOVE:Junk
+Spam promoway    |HEAD:From   |promoway                |MOVE:Junk
+Spam bongostudio |HEAD:From   |info@bongostudio.es     |MOVE:Junk
+Spam interservi  |HEAD:From   |info@interservi.info    |MOVE:Junk
+SPAM             |HEAD:Subject|\*\*\*SPAM\*\*\*        |MOVE:Junk
 Spam french      |HEAD:Subject|Le Cash et les Cadeaux  |DELETE
 
 # ==================[Spam by TEXT]=====================================================================
-Spam VIAzzGRA    |TEXT|---    |VIAzzGRA                                                   |MOVE:.Junk
-Spam CIAzzLIS    |TEXT|---    |CIAzzLIS                                                   |MOVE:.Junk
-Spam Portugales  |TEXT|---    |Ofrecimiento de cooperacion para los espanoles y portugales|MOVE:.Junk
-Spam Relojes     |TEXT|---    |Vive y deja a amante                                       |MOVE:.Junk
-Spam Nicandro    |TEXT|---    |Nicandro@westconsl.com                                     |MOVE:.Junk
-Spam Portugales  |TEXT|---    |Ofrecimiento de cooperacion para los espanoles y portugales|MOVE:.Junk
+Spam VIAzzGRA    |TEXT|VIAzzGRA                                                   |MOVE:Junk
+Spam CIAzzLIS    |TEXT|CIAzzLIS                                                   |MOVE:Junk
+Spam Portugales  |TEXT|Ofrecimiento de cooperacion para los espanoles y portugales|MOVE:Junk
+Spam Relojes     |TEXT|Vive y deja a amante                                       |MOVE:Junk
+Spam Nicandro    |TEXT|Nicandro@westconsl.com                                     |MOVE:Junk
+Spam Portugales  |TEXT|Ofrecimiento de cooperacion para los espanoles y portugales|MOVE:Junk

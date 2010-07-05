@@ -12,5 +12,6 @@
  define('IMAP_PASS',    "mypass");
  define('IMAP_INBOX',   "INBOX");
  define('IMAP_OPTIONS', "/imap/ssl/novalidate-cert");
+ define('ERRORLEVEL',   "E_ALL ^ E_NOTICE ^ E_WARNING");
 
 ?>
