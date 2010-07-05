@@ -145,10 +145,18 @@
             $this->output->decir("      - Message id ".$uid."...", 0);
             if($rule['action'] == "MOVE")
             {
-                $sucess = imap_mail_move($this->conn, $uid, $rule['destination'], CP_UID);
+                $success = imap_mail_move($this->conn, $uid, $rule['destination'], CP_UID);
+            }
+            elseif($rule['action'] == "COPY")
+            {
+                $success = imap_mail_copy($this->conn, $uid, $rule['destination'], CP_UID);
+            }
+            elseif($rule['action'] == "DELETE")
+            {
+                $success = imap_delete($this->conn, $uid, FT_UID);
             }
 
-            if($sucess)
+            if($success)
             {
                 $this->output->decir("OK");
             }
@@ -171,7 +179,8 @@
 
 
  /*
-  * Clase clasificadora.
+  * Sort and dispatching class.
+  *
   */
  class Dispatcher
  {
