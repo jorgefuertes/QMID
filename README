@@ -1,0 +1,25 @@
+------------------------------
+     ___  __  __ ___ ____
+    / _ \|  \/  |_ _|  _ \
+   | | | | |\/| || || | | |
+   | |_| | |  | || || |_| |
+    \__\_\_|  |_|___|____/
+
+ Queru's Mail IMAP Dispatcher
+------------------------------
+
+INTRODUCTION:
+
+QMID it's a mail sorter or dispatcher that's connect with your mail server using IMAP and executes the rules defined at
+"qmid-rules.conf" over the Inbox messages, doing the required actions like move, copy or delete the message.
+
+ADVANTAGES OVER YOUR MUA RULES AND OTHER SYSTEMS:
+
+  - QMID can live at mail server or at any server wich can connect to your imap server.
+  - QMID can run from the cron, and execute the rules totally unatended.
+  - QMID mantains your server folders clean and sorted.
+  - You can connect to server with your mobile or tablet, and have the mail pre-sorted by QMID. Don't need to use your
+    big computer's mua to sort.
+  - QMID can be very fast if it's in the same server that your email.
+  - Opensource and free (as in freedom). You can adapt it to meet your needs.
+  - And finally, QMID it's KISS (Keep It Simple Stupid), very light, very clean, very easy to configure and install.

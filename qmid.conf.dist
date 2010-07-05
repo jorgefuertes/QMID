@@ -1,0 +1,16 @@
+<?php
+/* 
+ * QMID's general configuration.
+ * TODO: Translate to real conf, no code.
+ */
+
+ define('DATEFORMAT',   "d/m/Y@H:i:s");
+ define('LOGFILE',      "/var/log/qmid.log");
+ define('IMAP_HOST',    "localhost");
+ define('IMAP_PORT',    "993");
+ define('IMAP_USER',    "user@domain.com");
+ define('IMAP_PASS',    "mypass");
+ define('IMAP_INBOX',   "INBOX");
+ define('IMAP_OPTIONS', "/imap/ssl/novalidate-cert");
+
+?>
