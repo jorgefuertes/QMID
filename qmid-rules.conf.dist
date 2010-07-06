@@ -20,9 +20,11 @@
 # ----------------------------------------------------------------------------------------------------
 # NOTE: php's imap implementation, based on c-imap library (imap2), cannot do a real HEADER search.
 #       Then, the only headers that can be searched by index are: BCC, CC, FROM, SUBJECT, and TO.
-#       We are simulating all other header search with full text search at very less speed.
+#       We are simulating all other header search with full text search at very less speed, BUT IT
+#       DOES NOT WORK either. I tried to use the IMAP4 "HEADER" tag, with no results.
+#       AT THE END: We can only search by standard headers or in the body of the messages with actual
+#       php implementation. Sorry.
 # ====================================================================================================
-
 
 # ==========[Lists]===========================================================================
 
