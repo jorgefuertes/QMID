@@ -24,16 +24,16 @@
  $output = new Output();
  $error  = new ErrorControl();
 
- $output->decir("+++ QMID DISPATCHER +++", 2);
+ $output->say("+++ QMID DISPATCHER +++", 2);
  $inicio = time();
- $output->decir("> Started at: ".date(DATEFORMAT));
+ $output->say("> Started at: ".date(DATEFORMAT));
 
  /* New dispatcher wich parses the rules: */
  $dispatcher = new Dispatcher;
 
  /* Imap: */
  $imap = new imap();
- $output->decir("> ".$imap->count()." messages to process.");
+ $output->say("> ".$imap->count()." messages to process.");
  $dispatcher->imap = $imap;
 
  /* Process the mail */
@@ -57,17 +57,17 @@
          $this->output = new Output();
          $this->error  = new ErrorControl();
          # Opens imap conection:
-         $this->output->decir("> Server: ".IMAP_CONN.".");
-         $this->output->decir("> Connecting to IMAP server...", 0);
+         $this->output->say("> Server: ".IMAP_CONN.".");
+         $this->output->say("> Connecting to IMAP server...", 0);
          $this->conn = imap_open(IMAP_CONN, IMAP_USER, IMAP_PASS);
          if(!$this->conn)
          {
-             $this->output->decir("FAIL");
+             $this->output->say("FAIL");
              $this->error->CriticalError("IMAP connection error.");
          }
          else
          {
-             $this->output->decir("OK");
+             $this->output->say("OK");
          }
 
          ###DEBUG###
@@ -94,11 +94,11 @@
          else
          {
              # HEADER not admited by IMAP2 search. Need to simulate.
-             $this->output->decir("Not admited...", 0);
+             $this->output->say("Not admited...", 0);
              return false;
          }
 
-         $this->output->decir("(QUERY: ".$query.")...", 0);
+         $this->output->say("(QUERY: ".$query.")...", 0);
          $aResults = imap_search($this->conn, $query, FT_UID);
          if(count($aResults) > 0)
          {
@@ -146,19 +146,19 @@
       */
      function ExecuteAction($rule, $aResults)
      {
-        $this->output->decir("    - Executing action: " . $rule['action'], 0);
+        $this->output->say("    - Executing action: " . $rule['action'], 0);
         if ($rule['destination'] !== false)
         {
-            $this->output->decir("-->".$rule['destination'].":");
+            $this->output->say("-->".$rule['destination'].":");
         }
         else
         {
-            $this->output->decir(":");
+            $this->output->say(":");
         }
 
         foreach($aResults as $key => $uid)
         {
-            $this->output->decir("      - Message id ".$uid."...", 0);
+            $this->output->say("      - Message id ".$uid."...", 0);
             if($rule['action'] == "MOVE")
             {
                 $success = imap_mail_move($this->conn, $uid, $rule['destination'], CP_UID);
@@ -174,22 +174,22 @@
 
             if($success)
             {
-                $this->output->decir("OK");
+                $this->output->say("OK");
             }
             else
             {
-                $this->output->decir("FAIL");
+                $this->output->say("FAIL");
             }
         }
      }
 
      function __destruct()
      {
-         $this->output->decir("> Cleaning mailboxes...", 0);
+         $this->output->say("> Cleaning mailboxes...", 0);
          imap_expunge($this->conn);
-         $this->output->decir("OK");
+         $this->output->say("OK");
          imap_close($this->conn);
-         $this->output->decir("> IMAP connection closed.");
+         $this->output->say("> IMAP connection closed.");
      }
  }
 
@@ -223,10 +223,10 @@
          }
          else
          {
-             $this->output->decir("> Executing rules.");
+             $this->output->say("> Executing rules.");
              foreach($this->aRules as $key => $rule)
              {
-                $this->output->decir("  + Executing rule ".$key."/".count($this->aRules).": ".$rule['name']."...", 0);
+                $this->output->say("  + Executing rule ".$key."/".count($this->aRules).": ".$rule['name']."...", 0);
                 if($rule['type'] == "HEAD")
                 {
                     $aResults = $this->imap->SearchByHeader($rule['header'], $rule['text']);
@@ -237,15 +237,15 @@
                 }
                 if($aResults !== false)
                 {
-                    $this->output->decir(count($aResults)." matches:");
+                    $this->output->say(count($aResults)." matches:");
                     if(count($aResults) > 0)
                     {
-                        $this->output->decir("    - Matches: ", 0);
+                        $this->output->say("    - Matches: ", 0);
                         foreach($aResults as $num => $uid)
                         {
-                            $this->output->decir("[".$uid."] ", 0);
+                            $this->output->say("[".$uid."] ", 0);
                         }
-                        $this->output->decir("");
+                        $this->output->say("");
                     }
 
                     # Executing the rule's action:
@@ -253,7 +253,7 @@
                 }
                 else
                 {
-                    $this->output->decir("no matches.");
+                    $this->output->say("no matches.");
                 }
              }
         }
@@ -264,7 +264,7 @@
       */
      function loadRules()
      {
-         $this->output->decir("> Processing rules.");
+         $this->output->say("> Processing rules.");
 	 if(file_exists(RULES))
 	 {
 		$aRules = array();
@@ -325,7 +325,7 @@
                         }
 	        }
         	fclose($fRules);
-                $this->output->decir("> Process finished, ".count($aRules)." rules loaded.");
+                $this->output->say("> Process finished, ".count($aRules)." rules loaded.");
 	        return $aRules;
 	 }
 	 else
@@ -350,7 +350,7 @@
     {
         foreach($this->aRules as $key => $rule)
         {
-            $this->output->decir(" - [".$key.":".$rule['nombre']."]-->".$rule['destino']);
+            $this->output->say(" - [".$key.":".$rule['nombre']."]-->".$rule['destino']);
         }
     }
 
@@ -381,7 +381,7 @@
     /*
      * Terminal and log output.
      */
-    public function decir($txt, $nLF = 1, $error = false, $log = true)
+    public function say($txt, $nLF = 1, $error = false, $log = true)
     {
         # Carrige return's string:
         $rtns = "";
@@ -420,13 +420,13 @@
     public function Warn($txt)
     {
         $this->ErrorCount++;
-        $this->output->decir("*** ERROR: ".$txt." ***", 2, true);
+        $this->output->say("*** ERROR: ".$txt." ***", 2, true);
     }
 
     public function CriticalError($txt)
     {
         $this->ErrorCount++;
-        $this->output->decir("*** ERROR: ".$txt." ***", 2, true);
+        $this->output->say("*** ERROR: ".$txt." ***", 2, true);
         $this->Finish();
     }
 
@@ -434,12 +434,12 @@
     {
         if($this->ErrorCount == 0)
         {
-            $this->output->decir("> Ended without errors.", 2);
+            $this->output->say("> Ended without errors.", 2);
             $level = 0;
         }
         else
         {
-            $this->output->decir("> Ended with ".$this->ErrorCount." errors.", 2, true);
+            $this->output->say("> Ended with ".$this->ErrorCount." errors.", 2, true);
             $level = 1;
         }
 
