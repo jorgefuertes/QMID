@@ -20,12 +20,52 @@
  define('IMAP_CONN',  "{".IMAP_HOST.":".IMAP_PORT.IMAP_OPTIONS."}".IMAP_INBOX);
  error_reporting(ERRORLEVEL);
 
+ /*
+  * Take command line arguments:
+  * -v/--verbose: Verbose mode (defaults to log mode).
+  * -d/--deliver: Deliver mode (defaults to imap client mode).
+  * -l/--log:     Log to file  (defaults to yes).
+  */
+ foreach($argv as $key => $arg)
+ {
+    if(preg_match("/\-v|\-\-verbose/", $arg))
+    {
+        define('VERBOSE', true);
+        if(defined('DELIVER'))
+        {
+            echo "\nERROR: Verbose mode incompatible with deliver mode.\n";
+            exit(1);
+        }
+    }
+    elseif(preg_match("/\-d|\-\-deliver/", $arg))
+    {
+        define('DELIVER', true);
+        if(defined('VERBOSE'))
+        {
+            echo "\nERROR: Deliver mode incompatible with verbose mode.\n";
+            exit(1);
+        }            
+    }
+    elseif(preg_match("/\-l|\-\-log/", $arg))
+    {
+        define('LOG', true);
+    }
+    elseif(!preg_match("/qmid.php/", $arg))
+    {
+        echo "\nERROR: Unknown argument '".$arg."'";
+        exit(1);
+    }
+ }
+ /* Defaults: */
+ if(!defined('VERBOSE')) define ('VERBOSE', true);
+ if(!defined('LOG'))     define ('LOG',     true);
+ if(!defined('DELIVER')) define ('DELIVER', false);
+
  /* Instantiate general output and error: */
  $output = new Output();
  $error  = new ErrorControl();
 
  $output->say("+++ QMID DISPATCHER +++", 2);
- $inicio = time();
  $output->say("> Started at: ".date(DATEFORMAT));
 
  /* New dispatcher wich parses the rules: */
@@ -79,7 +119,7 @@
       * Search messages by header contents.
       * @param string $header Header to search.
       * @param string $text   Text that must be in the header.
-      * @return array         Array of mensajes matching the search.
+      * @return array         Array of messages matching the search.
       */
      function SearchByHeader($header, $text)
      {
@@ -157,7 +197,7 @@
      }
 
      /*
-      * Cuenta los mensajes en el inbox.
+      * Cuenta los messages en el inbox.
       * @return integer
       */
      function count()
@@ -240,10 +280,15 @@
      }
 
      /*
-      * Procesado de mensajes.
+      * Procesado de messages.
       */
      function processMailbox()
      {
+         $start         = time();
+         $matches       = 0;
+         $nMessages     = $this->imap->count();
+
+         $this->output->say("> Dispatching started at ".date(DATEFORMAT, $start).".");
          if(empty($this->imap))
          {
              $this->error->CriticalError("Missing IMAP connection.");
@@ -257,12 +302,12 @@
                         .": ".$rule['name']."...", 0);
                 if($rule['type'] == "HEAD")
                 {
-                    # Header based search:
+                    /* Header based search: */
                     $aResults = $this->imap->SearchByHeader($rule['header'], $rule['text']);
                 }
                 elseif($rule['type'] == "TEXT")
                 {
-                    # Full text search:
+                    /* Full text search: */
                     $aResults = $this->imap->SearchByBody($rule['text']);
                 }
                 else
@@ -279,12 +324,13 @@
                         $this->output->say("    - Matches: ", 0);
                         foreach($aResults as $num => $uid)
                         {
+                            $matches++;
                             $this->output->say("[".$uid."] ", 0);
                         }
                         $this->output->say("");
                     }
 
-                    # Executing the rule's action:
+                    /* Executing the rule's action: */
                     $this->imap->ExecuteAction($rule, $aResults);
                 }
                 else
@@ -292,7 +338,26 @@
                     $this->output->say("no matches.");
                 }
              }
-        }
+         }
+         /* End of dispatching: totals */
+         $this->output->say("> END of messages.");
+         $this->output->say("> TOTAL: ".$matches." matches.");
+         $interval = time() - $start;
+         if($interval > 59)
+         {
+            $minutes = intval($interval/60);
+            $seconds = $interval - ($minutes * 60);
+            $txt = $minutes." minutes";
+            if($seconds > 0)
+            {
+                $txt .= " and ".$seconds." seconds";
+            }
+         }
+         else
+         {
+            $txt = $interval." seconds";
+         }
+         $this->output->say("> ".$nMessages." messages processed in ".$txt.".");
      }
 
      /*
@@ -397,27 +462,10 @@
   */
  class Output
  {
-    var $verbose;
-
-    /*
-     * Verbose only if we are in a tty.
-     */
-    function __construct()
-    {
-        if(posix_isatty(STDOUT))
-        {
-            $this->verbose = true;
-        }
-        else
-        {
-            $this->verbose = false;
-        }
-    }
-
     /*
      * Terminal and log output.
      */
-    public function say($txt, $nLF = 1, $error = false, $log = true)
+    public function say($txt, $nLF = 1)
     {
         # Carrige return's string:
         $rtns = "";
@@ -427,13 +475,13 @@
             $nLF--;
         }
         # Echo in verbose mode only:
-        if($this->verbose or $error)
+        if(VERBOSE)
         {
             echo $txt.$rtns;
         }
 
         # Log:
-        if($log)
+        if(LOG)
         {
             error_log($txt.$rtns, 3, LOGFILE);
         }
