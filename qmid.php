@@ -94,7 +94,8 @@
          else
          {
              # HEADER not admited by IMAP2 search. Need to simulate.
-             $query = 'TEXT "'.$header.": ".$text.'"';
+             #$query = 'TEXT "'.$header.": ".$text.'"';
+             $query = "HEADER ".$header.' "'.$text.'"';
          }
 
          ###DEBUG:###
@@ -252,7 +253,8 @@
              $this->output->say("> Executing rules.");
              foreach($this->aRules as $key => $rule)
              {
-                $this->output->say("  + Executing rule ".$key."/".count($this->aRules).": ".$rule['name']."...", 0);
+                $this->output->say(str_pad("  + Rule ".$key."/".count($this->aRules), 20, ".")
+                        .": ".$rule['name']."...", 0);
                 if($rule['type'] == "HEAD")
                 {
                     # Header based search:
