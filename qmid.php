@@ -76,7 +76,7 @@
      }
 
      /*
-      * Busca mensajes por su cabecera.
+      * Search messages by header contents.
       * @param string $header Header to search.
       * @param string $text   Text that must be in the header.
       * @return array         Array of mensajes matching the search.
@@ -89,16 +89,42 @@
          if(preg_match($imap2_headers, $header))
          {
              # It's an IMAP2 admited header. We can directly look for that.
-             $query = $header.' "'.$text.'"';             
+             $query = strtoupper($header).' "'.$text.'"';
          }
          else
          {
              # HEADER not admited by IMAP2 search. Need to simulate.
-             $this->output->say("Not admited...", 0);
-             return false;
+             $query = 'TEXT "'.$header.": ".$text.'"';
          }
 
+         ###DEBUG:###
          $this->output->say("(QUERY: ".$query.")...", 0);
+         ############
+         $aResults = imap_search($this->conn, $query, FT_UID);
+         if(count($aResults) > 0)
+         {
+            return $aResults;
+         }
+         else
+         {
+            return false;
+         }
+     }
+
+     /*
+      * Full text search.
+      * @param string Text to search.
+      * @return array Array of messages matching the search.
+      * 
+      */
+     function SearchByBody($text)
+     {
+         # Query:
+         $query = 'BODY "'.$text.'"';
+
+         ###DEBUG:###
+         $this->output->say("(QUERY: ".$query.")...", 0);
+         ############
          $aResults = imap_search($this->conn, $query, FT_UID);
          if(count($aResults) > 0)
          {
@@ -229,12 +255,20 @@
                 $this->output->say("  + Executing rule ".$key."/".count($this->aRules).": ".$rule['name']."...", 0);
                 if($rule['type'] == "HEAD")
                 {
+                    # Header based search:
                     $aResults = $this->imap->SearchByHeader($rule['header'], $rule['text']);
+                }
+                elseif($rule['type'] == "TEXT")
+                {
+                    # Full text search:
+                    $aResults = $this->imap->SearchByBody($rule['text']);
                 }
                 else
                 {
+                    $this->output->say("UNKNOWN RULE TYPE");
                     $aResults = false;
                 }
+
                 if($aResults !== false)
                 {
                     $this->output->say(count($aResults)." matches:");
@@ -312,7 +346,7 @@
                                     $aRules[] = array(
                                                 'name'        => $name,
                                                 'type'        => $type_only,
-                                                'header'      => strtoupper($header),
+                                                'header'      => $header,
                                                 'text'        => $text,
                                                 'action'      => strtoupper($action_only),
                                                 'destination' => $destination);
