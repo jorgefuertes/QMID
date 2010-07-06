@@ -83,7 +83,23 @@
       */
      function SearchByHeader($header, $text)
      {
-         $aResults = imap_search($this->conn, $header.' "'.$text.'"', FT_UID);
+         # Prepare the admited headers regexp:
+         $imap2_headers = "/^".str_replace(", ", "$|^", IMAP2_HEADERS)."$/i";
+         # Check if the header it's an admited to do imap2_search:
+         if(preg_match($imap2_headers, $header))
+         {
+             # It's an IMAP2 admited header. We can directly look for that.
+             $query = $header.' "'.$text.'"';             
+         }
+         else
+         {
+             # HEADER not admited by IMAP2 search. Need to simulate.
+             $this->output->decir("Not admited...", 0);
+             return false;
+         }
+
+         $this->output->decir("(QUERY: ".$query.")...", 0);
+         $aResults = imap_search($this->conn, $query, FT_UID);
          if(count($aResults) > 0)
          {
             return $aResults;
@@ -296,7 +312,7 @@
                                     $aRules[] = array(
                                                 'name'        => $name,
                                                 'type'        => $type_only,
-                                                'header'      => strtolower($header),
+                                                'header'      => strtoupper($header),
                                                 'text'        => $text,
                                                 'action'      => strtoupper($action_only),
                                                 'destination' => $destination);

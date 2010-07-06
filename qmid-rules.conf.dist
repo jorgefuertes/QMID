@@ -1,5 +1,6 @@
+# ====================================================================================================
 # QMID: Queru's mail IMAP dispatcher.
-#
+# ....................................................................................................
 # Mail dispatching rules.
 #
 # Name: |Type: |String: |Action:
@@ -16,16 +17,22 @@
 #            COPY:<mailbox> (Copy to given mailbox. Ex. COPY:.Important).
 #            DEL            (Delete message).
 #
+# ----------------------------------------------------------------------------------------------------
+# NOTE: php's imap implementation, based on c-imap library (imap2), cannot do a real HEADER search.
+#       Then, the only headers that can be searched by index are: BCC, CC, FROM, SUBJECT, and TO.
+#       We are simulating all other header search with full text search at very less speed.
+# ====================================================================================================
+
 
 # ==========[Lists]===========================================================================
 
-Symfony-devs |HEAD:List-id  |symfony-devs.googlegroups.com  |MOVE:Lists.Symfony
-Symfony-users|HEAD:List-id  |symfony-users.googlegroups.com |MOVE:Lists.Symfony
-Symfony-es   |HEAD:List-id  |symfony-es                     |MOVE:Lists.Symfony
+Symfony-devs |HEAD:List-Id  |symfony-devs.googlegroups.com  |MOVE:Lists.Symfony
+Symfony-users|HEAD:List-Id  |symfony-users.googlegroups.com |MOVE:Lists.Symfony
+Symfony-es   |HEAD:List-Id  |symfony-es                     |MOVE:Lists.Symfony
 
 # ==========[News]============================================================================
 Google Alerts |HEAD:From   |googlealerts-noreply@google.com |MOVE:News
-debian        |HEAD:List-id|debian-news                     |MOVE:News
+debian        |HEAD:List-Id|debian-news                     |MOVE:News
 
 # ==========[People]==========================================================================
 # Work:
