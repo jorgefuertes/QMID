@@ -3,4 +3,5 @@ qmid-rules.conf
 qmid.conf
 # Ignore auxiliar scripts:
 upload2server.sh
-
+# Ignore vim backups:
+*~
