@@ -112,7 +112,7 @@
          }
 
          $this->output->say("> Getting mailbox list...", 0);
-         $this->aMailboxes = imap_list($this->conn, "{INBOX}", "*");
+         $this->aMailboxes = imap_list($this->conn, "{".IMAP_INBOX."}", "*");
          $this->output->say(count($this->aMailboxes)." mailboxes.");
      }
 
@@ -208,21 +208,36 @@
 
      /*
       * Check if a mailbox exists and create it if not.
-      * @param 
+      * @param string mailbox
+      * @return boolean
       */
      function CheckAndCreateMailbox($mailbox)
      {
-        return true;
-        if(array_search($mailbox, $this->aMailboxes))
-        {
+         $mailbox = "{".IMAP_INBOX."}".$mailbox;
+         /* Look for the mailbox in the mailbox cache */
+         if(array_search($mailbox, $this->aMailboxes))
+         {
             # Mailbox exists:
             return true;
-        }
-        else
-        {
+         }
+         else
+         {
             # Mailbox don't exists:
-            return false;
-        }
+            $this->output->say("CREATING MAILBOX...", 0);
+            $rtn = imap_createmailbox($this->conn, $mailbox);
+            if($rtn)
+            {
+                $this->output->say("OK...", 0);
+                /* Add it to mailboxes list */
+                $this->aMailboxes[] = $mailbox;
+                return true;
+            }
+            else
+            {
+                $this->output->say("FAIL...", 0);
+                return false;
+            }
+         }
      }
 
      /*
@@ -234,7 +249,7 @@
      function ExecuteAction($rule, $aResults)
      {
         $this->output->say("    - Executing action: " . $rule['action'], 0);
-        if ($rule['destination'] !== false)
+        if (!empty($rule['destination']))
         {
             $this->output->say("-->".$rule['destination'].":");
         }
