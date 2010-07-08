@@ -91,6 +91,7 @@
      private $conn;
      private $output;
      private $error;
+     private $aMailboxes;
 
      function __construct()
      {
@@ -110,9 +111,9 @@
              $this->output->say("OK");
          }
 
-         ###DEBUG###
-         #$mailboxes = imap_list($this->conn, "{".IMAP_HOST."}", "*");
-         ###########
+         $this->output->say("> Getting mailbox list...", 0);
+         $this->aMailboxes = imap_list($this->conn, "{INBOX}", "*");
+         $this->output->say(count($this->aMailboxes)." mailboxes.");
      }
 
      /*
@@ -206,6 +207,25 @@
      }
 
      /*
+      * Check if a mailbox exists and create it if not.
+      * @param 
+      */
+     function CheckAndCreateMailbox($mailbox)
+     {
+        return true;
+        if(array_search($mailbox, $this->aMailboxes))
+        {
+            # Mailbox exists:
+            return true;
+        }
+        else
+        {
+            # Mailbox don't exists:
+            return false;
+        }
+     }
+
+     /*
       * Execute a rule over an array of message uids
       * @param array $rule     The rule.
       * @param array $aResults The messages result set.
@@ -228,11 +248,17 @@
             $this->output->say("      - Message id ".$uid."...", 0);
             if($rule['action'] == "MOVE")
             {
-                $success = imap_mail_move($this->conn, $uid, $rule['destination'], CP_UID);
+                if($this->CheckAndCreateMailbox($rule['destination']))
+                {
+                    $success = imap_mail_move($this->conn, $uid, $rule['destination'], CP_UID);
+                }
             }
             elseif($rule['action'] == "COPY")
             {
-                $success = imap_mail_copy($this->conn, $uid, $rule['destination'], CP_UID);
+                if($this->CheckAndCreateMailbox($rule['destination']))
+                {
+                    $success = imap_mail_copy($this->conn, $uid, $rule['destination'], CP_UID);
+                }
             }
             elseif($rule['action'] == "DELETE")
             {

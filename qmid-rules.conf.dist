@@ -45,7 +45,7 @@ Spam BBVA2       |HEAD:From   |BBVA@bbva-secure.es     |MOVE:Junk
 Spam promoway    |HEAD:From   |promoway                |MOVE:Junk
 Spam bongostudio |HEAD:From   |info@bongostudio.es     |MOVE:Junk
 Spam interservi  |HEAD:From   |info@interservi.info    |MOVE:Junk
-SPAM             |HEAD:Subject|\*\*\*SPAM\*\*\*        |MOVE:Junk
+SPAM             |HEAD:Subject|***SPAM***        |MOVE:Junk
 Spam french      |HEAD:Subject|Le Cash et les Cadeaux  |DELETE
 
 # ==================[Spam by TEXT]=====================================================================
